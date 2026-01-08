@@ -3,34 +3,41 @@ import { createContext, useEffect, useState } from "react";
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [auth, setAuth] = useState({
-    isAuthenticated: false,
-    user: null
-  });
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Restore session on refresh
+  // 🔑 Restore auth on refresh
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
+
     if (storedUser) {
-      setAuth({
-        isAuthenticated: true,
-        user: JSON.parse(storedUser)
-      });
+      setUser(JSON.parse(storedUser));
     }
+
+    setLoading(false);
   }, []);
 
-  const login = (user) => {
-    localStorage.setItem("user", JSON.stringify(user));
-    setAuth({ isAuthenticated: true, user });
+  const login = (userData) => {
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem("user");
-    setAuth({ isAuthenticated: false, user: null });
+    localStorage.removeItem("auth"); // credentials
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ ...auth, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        loading,
+        login,
+        logout
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
